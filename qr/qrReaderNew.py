@@ -44,6 +44,20 @@ def lineSlope(cent1, cent2):
         return dxy, align
 
 
+'''
+1  2
+3  4
+'''
+def getVertices(contours, cid, ):
+    result = []
+    corner1 = (0.0, 0.0)
+    corner2 = (0.0, 0.0)
+    corner3 = (0.0, 0.0)
+    corner4 = (0.0, 0.0)
+    x, y, w, h = cv2.boundingRect(contours[cid])
+
+
+
 
 
 
@@ -99,7 +113,7 @@ if __name__ == "__main__":
         cv2.CHAIN_APPROX_NONE)
 
     image_copy3 = resized.copy()
-    cv2.drawContours(image_copy3, contours, -1, (0,255,0), 3)
+    cv2.drawContours(image_copy3, contours, -1, (0,0,255), 3)
     cv2.imshow("retr tree!!!!", image_copy3)
     cv2.waitKey(0)
 
@@ -114,7 +128,7 @@ if __name__ == "__main__":
     #indexes of squares that were found
     #smallest is always [2] because it was the final child appended to the array
     #[
-        #set of countours(index)
+        #set of contours(index)
         #[1,2,3],
 
         #next set of contours
@@ -139,7 +153,7 @@ if __name__ == "__main__":
 
 
     image_final = resized.copy()
-    countourProperties = {}
+    contourProperties = {}
 
     for i in range(len(squaresFound)):
 
@@ -149,21 +163,28 @@ if __name__ == "__main__":
         centX = M['m10'] / M['m00']
         centY = M['m01'] / M['m00']
 
-        if i not in countourProperties:
-            countourProperties[i] = {}
-            countourProperties[i]["centroid"] = (centX, centY)
+        if i not in contourProperties:
+            contourProperties[i] = {}
+            contourProperties[i]["centroid"] = (centX, centY)
 
         #draw contours...
-        for countourIndex in squaresFound[i]:
-            cnt = contours[countourIndex]
+        for contourIndex in squaresFound[i]:
+            cnt = contours[contourIndex]
             cv2.drawContours(image_final, [cnt], 0, ((25*i)%255, 255, (15*i)%255), 3)
 
     cv2.imshow("squares we found", image_final)
     cv2.waitKey(0)
+    
 
-    A = countourProperties[0]["centroid"]
-    B = countourProperties[1]["centroid"]
-    C = countourProperties[2]["centroid"]
+
+    A = contourProperties[0]["centroid"]
+    B = contourProperties[1]["centroid"]
+    C = contourProperties[2]["centroid"]
+
+    cent2Index = {}
+    cent2Index[A] = 0
+    cent2Index[B] = 1
+    cent2Index[C] = 2
 
 
     AB = distance(A,B)
@@ -184,6 +205,7 @@ if __name__ == "__main__":
         median1 = B
         median2 = C
 
+
     dist = lineEquation(median1, median2, top)
     slope, align = lineSlope(median1, median2)
 
@@ -197,31 +219,81 @@ if __name__ == "__main__":
     #checking if both dist and slope pos
     if dist == math.fabs(dist) and slope == math.fabs(dist):
         #A bottom... B right
-        bottom = median2
-        right = median1
+        print("got here 1")
+        bottom = median1
+        right = median2
     elif slope != math.fabs(dist) and dist == math.fabs(dist):
         #A right ... B bottom
-        bottom = median1
-        right = median2
-    elif slope == math.fabs(dist) and dist != math.fabs(dist):
-        # A right ... B bottom
-        bottom = median1
-        right = median2
-    else:
-        # A bottom... B right
+        print("got here 2")
         bottom = median2
         right = median1
+    elif slope == math.fabs(dist) and dist != math.fabs(dist):
+        # A right ... B bottom
+        print("got here 3")
+        bottom = median2
+        right = median1
+    else:
+        # A bottom... B right
+        print("got here 4")
+        bottom = median1
+        right = median2
+    print("median1: {} median2: {}".format(median1, median2))
+
+    indexOfTop = cent2Index[top]
+    topContArray = squaresFound[indexOfTop]
+
+
+    indexOfBottom = cent2Index[bottom]
+    bottomContArray = squaresFound[indexOfBottom]
+
+    indexOfRight = cent2Index[right]
+    rightContArray = squaresFound[indexOfRight]
+
+    testingOrientation = resized.copy()
+    testingBoundedBoxCorners = resized.copy()
+    count = 0
+    for ix in [topContArray[0], bottomContArray[0], rightContArray[0]]:
+        cnt = contours[ix]
+
+        x, y, w, h = cv2.boundingRect(cnt)
+        x, y, w, h = cv2.boundingRect(cnt)
+        cv2.rectangle(testingBoundedBoxCorners, (x, y), (x + w, y + h), (150, 255, 35), 2)
+
+        print("contour index is: {}".format(ix))
+        print("the set of contours are: {}". format(cnt))
+
+        #remember is is bgr instead of rgb with opencv
+        if count == 0:
+            color = (255, 0, 0)
+        elif count == 1:
+            color = (0, 255, 0)
+        else:
+            color = (0,0,255)
+        cv2.drawContours(testingOrientation, [cnt], 0, color, 3)
+
+        count = count +1
+
+    cv2.imshow("testing orientation... top is {} bottom is {} right is {}".format("blue", "green", "red"), testingOrientation)
+    cv2.waitKey(0)
+
+    cv2.imshow("testing accuracy of bounded box", testingBoundedBoxCorners)
+    cv2.waitKey(0)
+
+
+
+
 
 
     # #### Identify the four corners of each Identification markers #### #
     #corner can be calculated as the 4 points of the contour that is furthest from the centroid
+    #get vertices of example code...
 
     print("\n\n")
-    print("len of countours is: {}".format(len(contours)))
+    print("len of contours is: {}".format(len(contours[0])))
+    print(contours[0][0])
     print("\n\n")
 
     print(contours[1][0][0][0])
-    print(type(contours[0][0]))
 
     #for contour in contours:
         #print(contour)
