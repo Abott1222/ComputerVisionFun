@@ -213,6 +213,21 @@ if __name__ == "__main__":
         right = median1
 
 
+    # #### Identify the four corners of each Identification markers #### #
+    #corner can be calculated as the 4 points of the contour that is furthest from the centroid
+
+    print("\n\n")
+    print("len of countours is: {}".format(len(contours)))
+    print("\n\n")
+
+    print(contours[1][0][0][0])
+    print(type(contours[0][0]))
+
+    #for contour in contours:
+        #print(contour)
+        #print(type(contour))
+
+
 
 
 
